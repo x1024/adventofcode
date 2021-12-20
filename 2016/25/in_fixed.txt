@@ -1,0 +1,7 @@
+add 2534 a d
+cpy d a
+mod a 2 c
+div a 2 a
+out c
+jnz a -3
+jmp -5
