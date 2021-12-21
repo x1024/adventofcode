@@ -12,17 +12,10 @@ def parse_input(data):
     data = data.strip('\n').split("\n")
     code = map(c, data[0])
     image = [map(c, row) for row in data[2:]]
-    return code, image
 
+    border = 0
 
-def iterate(code, image, border = 0):
-    def b(l):
-        result = 0
-        for c in l:
-            result = result * 2 + c
-        return result
-
-    image = [[border, border] + row + [border,border] for row in image]
+    image = [[border] * 1 + row + [border] * 1 for row in image]
     image = [
         [border] * len(image[0]),
         [border] * len(image[0]),
@@ -30,32 +23,44 @@ def iterate(code, image, border = 0):
         [border] * len(image[0]),
         [border] * len(image[0]),
     ]
-    new_image = []
-    for row in image:
-        new_image.append([0] * len(image[0]))
 
-    for i in range(1, len(image) -1):
-        for j in range(1, len(image[0]) -1):
-            ca = image[i-1][j-1:j-1+3]
-            cb = image[i][j-1:j-1+3]
-            cc = image[i+1][j-1:j-1+3]
-            c = ca + cb + cc
-            index = b(c)
-            # if i == 1 and j == 1: print c, index, code[index]
-            new_image[i][j] = code[index]
-    
-    if border == 0:
-        border = code[b([0,0,0, 0,0,0, 0,0,0])]
-    else:
-        border = code[b([1,1,1, 1,1,1, 1,1,1])]
-    l0 = len(image)
-    l1 = len(image[0])
-    for i in range(l0):
-        new_image[i][0] = border
-        new_image[i][l1-1] = border
-    for j in range(l1):
-        new_image[0][j] = border
-        new_image[l0-1][j] = border
+    return code, image
+
+
+def iterate(code, image):
+    def b(l):
+        result = 0
+        for c in l:
+            result = result * 2 + c
+        return result
+
+    def transform(i, j):
+        ca = image[i-1][j-1:j-1+3]
+        cb = image[i][j-1:j-1+3]
+        cc = image[i+1][j-1:j-1+3]
+        c = ca + cb + cc
+        index = b(c)
+        return code[index]
+
+    l0 = len(image) + 2
+    l1 = len(image[0]) + 2
+
+    # add old border
+    border = image[0][0]
+    image = [[border] + row + [border] for row in image]
+    image = [[border] * l1] + image + [[border] * l1]
+
+    # transform the "inner" part of the image
+    new_image = [
+        [transform(i, j) for j in range(1, l1 -1)]
+        for i in range(1, l0 - 1)
+    ]
+
+    # add new, transformed, border
+    border = new_image[0][0]
+    new_image = [[border] + row + [border] for row in new_image]
+    new_image = [[border] * l1] + new_image + [[border] * l1]
+
     return new_image
 
 
@@ -65,12 +70,8 @@ def count(image):
 
 def solve(data, iterations=2):
     code, image = parse_input(data)
-    while iterations > 0:
-        image = iterate(code, image, 0)
-        iterations -= 1
-        if iterations == 0: break
-        image = iterate(code, image, code[0] == 1)
-        iterations -= 1
+    for _ in range(iterations): image = iterate(code, image)
+    if image[0][0] == 1: return float('inf')
     return count(image)
 
 
@@ -86,6 +87,10 @@ def test():
     data = open('in_test.txt').read()
     assert easy(data) == 35
     assert hard(data) == 3351
+    data = open('in.txt').read()
+    assert solve(data, 1) == float('inf')
+    assert solve(data, 2) == 5479
+    assert solve(data, 3) == float('inf')
 
 
 def main():
@@ -93,9 +98,6 @@ def main():
     data = open('in.txt').read()
     print easy(data)
     print hard(data)
-    # answer_easy, answer_hard = solve(data)
-    # print answer_easy
-    # print answer_hard
 
 
 if __name__ == '__main__':
