@@ -14,17 +14,21 @@ DESTINATION_A = -1 * CRAB_A
 DESTINATION_B = -1 * CRAB_B
 DESTINATION_C = -1 * CRAB_C
 DESTINATION_D = -1 * CRAB_D
-HALLWAY = -1 * TILE
-BAD_HALLWAY = -1 * (TILE + 1)
+BAD_HALLWAY = -1 * TILE
 CHARACTER = -10
 
+bad_hallways = ( (1, 3), (1, 5), (1, 7), (1, 9),)
 
-def get_crab(crab):
-    c, pos = crab
-    return (ord(c) - ord('A'), pos)
+offsets = [ (0,  1), (0, -1), ( 1, 0), (-1, 0), ]
+
+# costs = [1, 1, 10, 10, 100, 100, 1000, 1000]
+costs = [1, 1, 1, 1, 10, 10, 10, 10, 100, 100, 100, 100, 1000, 1000, 1000, 1000]
+
 
 def parse_input(data):
     data = [row.strip() for row in data.strip("\n").split("\n")]
+    data = ['##' + row + '##' if len(row) == 9 else row
+        for row in data]
     data = [row for row in data if row]
     crabs = [
         [],
@@ -55,29 +59,6 @@ def normalize_state(crabs):
         sorted(crabs[step*3:step*4])
     )
 
-bad_hallways = (
-    (1, 3),
-    (1, 5),
-    (1, 7),
-    (1, 9),
-)
-
-offsets = [
-    (0,  1),
-    (0, -1),
-    ( 1, 0),
-    (-1, 0),
-]
-
-# costs = [1, 1, 10, 10, 100, 100, 1000, 1000]
-costs = [1, 1, 1, 1, 10, 10, 10, 10, 100, 100, 100, 100, 1000, 1000, 1000, 1000]
-
-crab_types = [
-    CRAB_A, CRAB_A,
-    CRAB_B, CRAB_B,
-    CRAB_C, CRAB_C,
-    CRAB_D, CRAB_D,
-]
 
 def parse_row(row):
     return map(lambda c: TILE if c == '#' else EMPTY, row)
@@ -115,7 +96,7 @@ def print_maze(maze):
             elif c == CRAB_D: r.append('D')
             elif c == CHARACTER: r.append('@')
             else: r.append('.')
-        print ''.join(r)
+        print >>sys.stderr, ''.join(r)
 
 
 def get_maze(crabs):
@@ -136,6 +117,7 @@ def get_maze(crabs):
         maze[x][y] = CRAB_D
     return maze
 
+
 def hash_maze(maze):
     maze = [map(lambda c: '.' if c <= EMPTY else '#', row) for row in maze]
     maze = [''.join(row) for row in maze]
@@ -145,7 +127,7 @@ def hash_maze(maze):
 def hash_crabs(crabs):
     result = 0
     for crab in crabs:
-        result = result * 13 * 13 + (crab[0] * 13 + crab[1])
+        result = result * 15 * 15 + crab[0] * 15 + crab[1]
     return result
 
 memo = {}
@@ -180,7 +162,7 @@ def move_crab(crab, maze):
 def crab_should_stay(crab, crab_type, maze):
     x, y = crab
     if crab_type == maze[x][y] * -1:
-        # This crab is in its home
+        # This crab is already in its home
         for i in range(x + 1, len(maze) - 1):
             if maze[i][y] != crab_type:
                 # There are other crabs below this one
@@ -192,13 +174,6 @@ def crab_should_stay(crab, crab_type, maze):
   
 def get_moves(crabs):
     maze = get_maze(crabs)
-    # print_maze(maze)
-    # raw_input()
-    # The crabs always go AA BB CC DD
-    # print 'get maze'
-    # print_maze(maze)
-    # raw_input()
-    # print "---"
     crabs = list(crabs)
     for i, crab in enumerate(crabs):
         x, y = crab
@@ -206,49 +181,39 @@ def get_moves(crabs):
         start_type = maze_template[x][y]
         maze[x][y] = start_type
         cost = costs[i]
-        # print_maze(maze)
-        # raw_input()
-        # print i, 'moves:'
+
         if crab_should_stay(crab, crab_type, maze):
-            # print 'should stay', crab, crab_type
             continue
-        # print 'should move', crab, crab_type
-        # raw_input()
 
         for moves, pos in move_crab(crab, maze):
             x1, y1 = pos
             destination = maze[x1][y1]
             bottom_cell = maze[x1+1][y1]
-            if DESTINATION_D <= bottom_cell <= EMPTY:
-                # There's never an optimal move where a crab can still move down
-                continue
+
             if start_type == destination:
                 # There are actually no optimal moves
-                # that cause a crab to go to the same type of tile
+                # that cause a crab to go to the same type of tile it started on
                 continue
-            if start_type == HALLWAY and destination != -1 * crab_type:
-                # the crab can *only* go back to its place
+
+            if not (bottom_cell == TILE or bottom_cell == crab_type):
+                # The crab never needs to *not* be at the bottom of a home.
+                # This is because it can only ever enter its own home,
+                # and every home needs to be filled
                 continue
-            if destination == BAD_HALLWAY:
+
+            if not (destination == -1 * crab_type or destination == EMPTY):
+                # The crab always ends up either in a hallway or in its own home
                 continue
-            if DESTINATION_D <= destination <= DESTINATION_A:
-                if destination != -1 * crab_type:
-                    # another crab type's home
-                    continue
-                is_valid = (bottom_cell == TILE or
-                            bottom_cell == crab_type)
-                if not is_valid:
-                    # There's another crab in our home
-                    # or an empty space
+
+            if destination == -1 * crab_type:
+                # No crabs of other types can be present in the home
+                cells = (maze[c][y1] for c in range(x + 1, len(maze) - 1))
+                if any(CRAB_A < maze[c][y1] <= CRAB_D and maze[c][y1] != crab_type
+                    for c in cells):
                     continue
 
             maze[x1][y1] = CHARACTER
             new_cost = cost * moves
-            # print "crab: %s, destination: %s, cost: %s, pos: %s" % (
-            #     i, destination, new_cost, pos, 
-            # )
-            # print_maze(maze)
-            # raw_input()
 
             # move is good, send it
             old_crab_pos = crabs[i]
@@ -259,139 +224,124 @@ def get_moves(crabs):
 
         # Restore the initial state of the maze
         maze[x][y] = crab_type
-        # print "---"
 
 
-def solve(data, end_state, debug):
+def print_path(crabs, previous):
+    path = []
+    while crabs:
+        path.append(crabs)
+        crabs = previous[crabs]
+    for step in path[::-1]:
+        print_maze(get_maze(step))
+        print >>sys.stderr, "-----"
+        raw_input()
+
+
+def get_heuristic(crabs):
+    step = len(crabs) / 4
+    # goals = ( (9, 2), (9, 3), (9, 4), (9, 5))
+    # lowest crab first
+    d_crabs = list(reversed(sorted(crabs[step*3:step*4])))
+    goals = ((5, 9), (4, 9), (3, 9), (2, 9))
+    result = 0
+    for i in range(4):
+        c = d_crabs[i]
+        g = goals[i]
+        result += 1000 * (abs(c[0] - g[0]) + abs(c[1] - g[1]))
+    return result
+
+
+def solve(data):
+    end_state = parse_input('''
+        #############
+        #...........#
+        ###A#B#C#D###
+        ###A#B#C#D###
+        ###A#B#C#D###
+        ###A#B#C#D###
+        #############
+    ''')
     initial_state = parse_input(data)
-    print initial_state
-    print_maze(get_maze(initial_state))
-    q = queue.PriorityQueue()
-    q.put((0, initial_state))
-    seen = set()
-    max_cost = 0
-    # seen[initial_state] = (0, False)
 
-    if debug:
-        debug = map(parse_input, debug)
-    
+    seen = set()
+    previous = {}
+    q = queue.PriorityQueue()
+    q.put((0, 0, initial_state, None))
+    max_cost = 0
+
     while not q.empty():
         state = q.get()
-        cost, crabs = state
+        _, cost, crabs, previous_crabs = state
 
         hashed = hash_crabs(crabs)
         if hashed in seen: continue
         seen.add(hashed)
+        previous[crabs] = previous_crabs
 
-        if debug and crabs in debug:
-            print ''
-            print ''
-            print ''
-            print "Cost: %s, seen: %s" % (cost, len(seen))
-            print_maze(get_maze(crabs))
-            print crabs
-            print end_state
-            raw_input()
-        if cost > max_cost + 50:
-            print "Cost: %s, seen: %s" % (cost, len(seen))
+        if cost > max_cost + 1000:
+            print >>sys.stderr, "Cost: %s, seen: %s" % (cost, len(seen))
             print_maze(get_maze(crabs))
             max_cost = cost
 
         if crabs == end_state:
-            print "END:"
-            print "--------"
-            print "Cost: %s, state: %s" % (cost, end_state)
-            print_maze(get_maze(end_state))
+            # print_path(crabs, previous)
             return cost
 
         for move_cost, new_crabs in get_moves(crabs):
             new_cost = cost + move_cost
-            q.put((new_cost, new_crabs))
+            heuristic = get_heuristic(new_crabs)
+            q.put((new_cost + heuristic, new_cost, new_crabs, crabs))
 
     result = 0
     return result
 
 
-def easy(data, end_state = None, debug=None):
-    if not end_state:
-        end_state = '''
-            #############
-            #...........#
-            ###A#B#C#D###
-            ###A#B#C#D###
-            ###A#B#C#D###
-            ###A#B#C#D###
-            #############
-        '''
-    # print end_state
-    end_state = parse_input(end_state)
-
-    return solve(data, end_state, debug=debug)
-
-
-def hard(data):
+def easy(data):
+    extra_rows = [
+        '  #A#B#C#D#  ',
+        '  #A#B#C#D#  ',
+    ]
+    data = data.split('\n')
+    data = data[:4] + extra_rows + data[4:]
+    data = '\n'.join(data)
     return solve(data)
 
 
-def debug_state(state):
-    parsed = parse_input(state)
-    print state
-    print parsed
-    print_maze(get_maze(parsed))
+def hard(data):
+    extra_rows = [
+        '  #D#C#B#A#  ',
+        '  #D#B#A#C#  ',
+    ]
+    data = data.split('\n')
+    data = data[:3] + extra_rows + data[3:]
+    data = '\n'.join(data)
+    return solve(data)
+
+
+def parse_states(filename):
+    return open(filename, 'r').read().split('\n\n')
+
+
+def test_easy():
+    states = parse_states('in_easy_test.txt')
+    assert easy(states[0]) == 12521
 
 
 def test_hard():
-    states = open('in_hard_test.txt', 'r').read().split('\n\n')
-    new_states = []
-    for state in states:
-        state = state.split('\n')
-        state = '\n'.join(row.replace(' ', '#').ljust(len(state[0]), '#')
-            for row in state)
-        new_states.append(state)
-    states = new_states
-
-    states = states[-12:]
-    total_cost = 0
-    initial_state = states[0]
-    print initial_state
-    value = easy(initial_state, debug=states)
-    print total_cost
-    print value
-
-    total_cost = 44169
-    assert value == total_cost
+    states = parse_states('in_hard_test.txt')
+    assert hard(states[0]) == 44169
 
 
 def test():
-    # test_easy()
+    test_easy()
     test_hard()
-    exit()
 
 
 def main():
-    # test()
-
-    data = '''
-#############
-#...........#
-###B#A#A#D###
-###B#C#D#C###
-#############
-'''
-    # print easy(data)
-
-    data = '''
-#############
-#...........#
-###B#A#A#D###
-###D#C#B#A###
-###D#B#A#C###
-###B#C#D#C###
-#############
-'''
+    test()
+    data = parse_states('in.txt')[0]
     print easy(data)
-    # print hard(data)
-
+    print hard(data)
 
 if __name__ == '__main__':
     main()
