@@ -247,6 +247,10 @@ def get_heuristic(crabs):
     for i in range(4):
         c = d_crabs[i]
         g = goals[i]
+        if c[1] != 9:
+            # Crab has to move up to row 1 first
+            result += 1000 * abs(c[0] - 1)
+            c = (1, c[1])
         result += 1000 * (abs(c[0] - g[0]) + abs(c[1] - g[1]))
     return result
 
