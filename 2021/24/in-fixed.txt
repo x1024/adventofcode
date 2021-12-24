@@ -1,0 +1,253 @@
+inp w
+noop
+noop
+noop
+noop
+noop
+noop
+noop
+noop  {x=0}
+noop
+noop  {x=0,y=26}
+noop
+noop
+noop  {x=0,y=0,w=input}
+add z w
+add z 15
+noop
+noop
+inp w
+noop
+noop
+noop
+noop
+noop
+noop
+noop
+noop
+noop
+noop
+noop # y = 26, z = (w+15)
+mul z 26
+noop # z = (w[0]+15)*26
+add y w
+add y 10
+noop # y = w[1]+10
+add z y  # z = (w[0]+15)*26 + w[1] + 10
+inp w
+noop
+noop
+noop
+noop
+noop
+noop
+set x 1
+set y 26
+noop
+noop
+noop
+mul z y  # z = ((w[0]+15)*26 + w[1] + 10) * 26 + w[2] + 2
+mul y 0
+add y w
+add y 2
+noop
+add z y # z = ((w[0]+15)*26 + w[1] + 10) * 26 + w[2] + 2
+inp w
+noop
+noop
+noop
+noop
+noop
+noop
+noop
+noop
+noop
+set x 1
+set y 26
+mul z y
+mul y 0
+add y w
+add y 16
+mul y x
+add z y
+inp w
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -12
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 12
+mul y x
+add z y
+inp w
+mul x 0
+add x z
+mod x 26
+noop
+noop
+noop
+noop
+noop
+noop
+set x 1
+set y 26
+mul z y
+mul y 0
+add y w
+add y 11
+mul y x
+add z y
+inp w
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -9
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 5
+mul y x
+add z y
+inp w
+mul x 0
+add x z
+mod x 26
+noop
+noop
+noop
+noop
+noop
+noop
+set x 1
+set y 26
+mul z y
+mul y 0
+add y w
+add y 16
+mul y x
+add z y
+inp w
+mul x 0
+add x z
+mod x 26
+noop
+noop
+noop
+noop
+noop
+noop
+noop
+set x 1
+set y 26
+mul z y
+mul y 0
+add y w
+add y 6
+mul y x
+add z y
+inp w
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -14
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 15
+mul y x
+add z y
+inp w
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -11
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 3
+mul y x
+add z y
+inp w
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -2
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 12
+mul y x
+add z y
+inp w
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -16
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 10
+mul y x
+add z y
+inp w
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -14
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 13
+mul y x
+add z y
