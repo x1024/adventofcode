@@ -26,15 +26,15 @@ pub mod tests {
     }
 }
 
-fn parse_input() -> Result<Vec<i32>> {
+fn parse_input() -> Result<Vec<i64>> {
     let res = fs::read_to_string("input/2.txt")?
         .split(",")
-        .map(|line| line.parse::<i32>().unwrap())
+        .map(|line| line.parse::<i64>().unwrap())
         .collect::<Vec<_>>();
     Ok(res)
 }
 
-fn easy(code: &Vec<i32>) -> i32 {
+fn easy(code: &Vec<i64>) -> i64 {
     let mut code = code.clone();
     code[1] = 12;
     code[2] = 2;
@@ -42,7 +42,7 @@ fn easy(code: &Vec<i32>) -> i32 {
     code[0]
 }
 
-fn hard(code: &Vec<i32>) -> i32 {
+fn hard(code: &Vec<i64>) -> i64 {
     let expected = 19690720;
     for noun in 0..100 {
         for verb in 0..100 {

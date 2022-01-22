@@ -27,7 +27,7 @@ pub mod tests {
     #[test]
     pub fn test_input_repeat() {
       let data = vec!(3,0,4,0,99);
-      let mut result:i32 = 0;
+      let mut result:i64 = 0;
       run_intcode(data, || 10, |val| result = val);
       assert_eq!(result, 10);
     }
@@ -50,7 +50,7 @@ pub mod tests {
     #[test]
     pub fn test_jumps_position_mode() {
       let data = vec!(3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9);
-      let mut result:i32 = 0;
+      let mut result:i64 = 0;
       run_intcode(data.clone(), || 0, |val| result = val);
       assert_eq!(result, 0);
 
@@ -61,7 +61,7 @@ pub mod tests {
     #[test]
     pub fn test_jumps_immediate_mode() {
       let data = vec!(3,3,1105,-1,9,1101,0,0,12,4,12,99,1);
-      let mut result:i32 = 0;
+      let mut result:i64 = 0;
       run_intcode(data.clone(), || 0, |val| result = val);
       assert_eq!(result, 0);
 
@@ -75,7 +75,7 @@ pub mod tests {
         3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,
         1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,
         999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99);
-      let mut result:i32 = 0;
+      let mut result:i64 = 0;
 
       run_intcode(data.clone(), || 0, |val| result = val);
       assert_eq!(result, 999);
@@ -91,6 +91,7 @@ pub mod tests {
 enum Mode {
   Positional = 0,
   Immediate = 1,
+  Relative = 2,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -103,44 +104,48 @@ pub enum Opcode {
   JumpIfFalse,
   LessThan,
   Equals,
+  AdjustRelativeBase,
   Exit,
 }
 
 pub struct IntCode<'a> {
-  code: Vec<i32>,
-  modes: i32,
-  sp: usize,
+  code: Vec<i64>,
+  modes: i64,
+  stack_pointer: usize,
+  relative_base: usize,
   opcode: Opcode,
-  input: Box<dyn FnMut() -> i32 + 'a>,
-  output: Box<dyn FnMut(i32) + 'a>,
+  input: Box<dyn FnMut() -> i64 + 'a>,
+  output: Box<dyn FnMut(i64) + 'a>,
 }
 
 impl<'a> IntCode<'a>
 {
-  pub fn create(code: Vec<i32>,
-      input: Box<dyn FnMut() -> i32 + 'a>,
-      output: Box<dyn FnMut(i32) + 'a>)
+  pub fn create(code: Vec<i64>,
+      input: Box<dyn FnMut() -> i64 + 'a>,
+      output: Box<dyn FnMut(i64) + 'a>)
         -> IntCode<'a> {
     IntCode {
         code,
-        sp: 0,
+        stack_pointer: 0,
         modes: 0,
         opcode: Opcode::Exit,
+        relative_base: 0,
         input,
         output
     }
   }
 
   fn get_mode (&self, index: usize) -> Mode {
-    let i = self.modes / (10 as i32).pow(index as u32);
-    if i % 10 == 0 {
-      Mode::Positional
-    } else {
-      Mode::Immediate
+    let i = self.modes / (10 as i64).pow(index as u32);
+    match i % 10 {
+      0 => Mode::Positional,
+      1 => Mode::Immediate,
+      2 => Mode::Relative,
+      _ => panic!("Invalid mode")
     }
   }
 
-  fn get_opcode(&self, value: i32) -> Opcode {
+  fn get_opcode(&self, value: i64) -> Opcode {
     match value {
       1 => Opcode::Add,
       2 => Opcode::Multiply,
@@ -150,47 +155,60 @@ impl<'a> IntCode<'a>
       6 => Opcode::JumpIfFalse,
       7 => Opcode::LessThan,
       8 => Opcode::Equals,
+      9 => Opcode::AdjustRelativeBase,
       _ => Opcode::Exit,
     }
   }
 
-  fn get_param (&self, index: usize) -> i32 {
+  fn get_param (&self, index: usize) -> i64 {
     let code = &self.code;
     let mode = self.get_mode(index - 1);
-    let value = code[self.sp + index] as i32;
+    let value = code[self.stack_pointer + index] as i64;
 
     match mode {
       Mode::Immediate => value,
+      Mode::Relative => code[(self.relative_base as i64 + value) as usize],
       Mode::Positional => code[value as usize],
     }
   }
 
+  fn get_index (&self, index: usize) -> usize {
+    let code = &self.code;
+    let mode = self.get_mode(index - 1);
+    let value = code[self.stack_pointer + index] as i64;
+
+    match mode {
+      Mode::Immediate => panic!("Invalid mode."),
+      Mode::Relative => (self.relative_base as i64 + value) as usize,
+      Mode::Positional => value as usize,
+    }
+  }
+
+
   pub fn run_step (&mut self) -> Opcode {
-    let sp = self.sp;
+    let sp = self.stack_pointer;
     let code = &self.code;
     let value = code[sp];
     self.modes = value / 100;
     self.opcode = self.get_opcode(value % 100);
 
-    // println!("{:?} {} {:?}", self.opcode, self.sp, self.code);
-
     let steps = match self.opcode {
       Opcode::Add => {
         let v1 = self.get_param(1);
         let v2 = self.get_param(2);
-        let i3 = code[sp + 3] as usize; // assume this mode is *always* positional
+        let i3 = self.get_index(3);
         self.code[i3] = v1 + v2;
         4
       }
       Opcode::Multiply => {
         let v1 = self.get_param(1);
         let v2 = self.get_param(2);
-        let i3 = code[sp + 3] as usize; // assume this mode is *always* positional
+        let i3 = self.get_index(3);
         self.code[i3] = v1 * v2;
         4
       }
       Opcode::Input => {
-        let ia = code[sp + 1] as usize;
+        let ia = self.get_index(1);
         let input = &mut self.input;
         let v1l = input();
         self.code[ia] = v1l;
@@ -205,7 +223,7 @@ impl<'a> IntCode<'a>
       Opcode::JumpIfTrue => {
         let v1 = self.get_param(1);
         if v1 != 0 {
-          self.sp = self.get_param(2) as usize;
+          self.stack_pointer = self.get_param(2) as usize;
           0
         } else {
           3
@@ -214,7 +232,7 @@ impl<'a> IntCode<'a>
       Opcode::JumpIfFalse => {
         let v1 = self.get_param(1);
         if v1 == 0 {
-          self.sp = self.get_param(2) as usize;
+          self.stack_pointer = self.get_param(2) as usize;
           0
         } else {
           3
@@ -223,36 +241,45 @@ impl<'a> IntCode<'a>
       Opcode::LessThan => {
         let v1 = self.get_param(1);
         let v2 = self.get_param(2);
-        let i3 = code[sp + 3] as usize; // assume this mode is *always* positional
+        let i3 = self.get_index(3);
         self.code[i3] = if v1 < v2 { 1 } else { 0 };
         4
       }
       Opcode::Equals => {
         let v1 = self.get_param(1);
         let v2 = self.get_param(2);
-        let i3 = code[sp + 3] as usize; // assume this mode is *always* positional
+        let i3 = self.get_index(3);
         self.code[i3] = if v1 == v2 { 1 } else { 0 };
         4
+      }
+      Opcode::AdjustRelativeBase => {
+        let v1 = self.get_param(1);
+        self.relative_base = (self.relative_base as i64 + v1) as usize;
+        2
       }
       _ => return Opcode::Exit
     };
 
-    self.sp += steps;
+    self.stack_pointer += steps;
 
     self.opcode
   }
 }
 
-pub fn run_intcode_simple(code: Vec<i32>) -> Vec<i32> {
+pub fn run_intcode_simple(code: Vec<i64>) -> Vec<i64> {
   run_intcode(code, || 0, |val| println!("{}", val))
 }
 
-pub fn run_intcode<'a, I: 'a, O: 'a>(code: Vec<i32>, input: I, output: O) -> Vec<i32>
-    where I: FnMut() -> i32, O: FnMut(i32) {
+pub fn run_intcode<'a, I: 'a, O: 'a>(code: Vec<i64>, input: I, output: O) -> Vec<i64>
+    where I: FnMut() -> i64, O: FnMut(i64) {
+
+  let mut code = code.clone();
+  code.resize(10000, 0);
 
   let mut c = IntCode {
     code: code.clone(),
-    sp: 0,
+    stack_pointer: 0,
+    relative_base: 0,
     modes: 0,
     opcode: Opcode::Exit,
     input: Box::new(input),

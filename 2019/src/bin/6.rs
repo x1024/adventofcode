@@ -3,13 +3,6 @@ use std::collections::HashMap;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-use advent_of_code_2019::intcode::run_intcode;
-
-struct Tree<'a> {
-    parent: &'a Tree<'a>,
-    num_children: usize
-}
-
 #[cfg(test)]
 pub mod tests {
     use super::*;

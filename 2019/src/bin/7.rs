@@ -8,7 +8,7 @@ use pipe_channel::*;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-use advent_of_code_2019::intcode::{IntCode, Opcode, run_intcode};
+use advent_of_code_2019::intcode::run_intcode;
 
 
 #[cfg(test)]
@@ -51,31 +51,26 @@ pub mod tests {
     }
 }
 
-fn parse_input(data: String) -> Result<Vec<i32>> {
+fn parse_input(data: String) -> Result<Vec<i64>> {
     let res = data
         .split(",")
-        .map(|line| line.parse::<i32>().unwrap())
+        .map(|line| line.parse::<i64>().unwrap())
         .collect::<Vec<_>>();
     Ok(res)
 }
 
-fn easy(code: &Vec<i32>) -> i32 {
-    fn simulate(permutation: &Vec<i32>, code: &Vec<i32>) -> i32 {
-        let mut inputs = Vec::<Box<dyn FnMut() -> i32>>::new();
-        let mut outputs = Vec::<Box<dyn FnMut(i32)>>::new();
+fn easy(code: &Vec<i64>) -> i64 {
+    fn simulate(permutation: &Vec<i64>, code: &Vec<i64>) -> i64 {
+        let mut inputs = Vec::<Box<dyn FnMut() -> i64>>::new();
+        let mut outputs = Vec::<Box<dyn FnMut(i64)>>::new();
 
-        for i in permutation {
-            let (mut send, mut receive) = channel::<i32>();
-
+        for _ in permutation {
+            let (mut send, mut receive) = channel::<i64>();
             inputs.push(Box::new(move || {
-                let val = receive.recv().expect("Invalid value sent over channel");
-                // println!("Input {} {}", i, val);
-                val
+                receive.recv().expect("Invalid value sent over channel")
             }));
-
             outputs.push(Box::new(move |val| {
-                // println!("Output {} {}", i, val);
-                send.send(val).expect("Unable to send value over channel");
+                send.send(val).expect("Unable to send value over channel")
             }));
         }
 
@@ -98,31 +93,29 @@ fn easy(code: &Vec<i32>) -> i32 {
         .fold(0, |acc,val| acc.max(val))
 }
 
-fn hard(code: &Vec<i32>) -> i32 {
-    fn simulate_hard(permutation: &Vec<i32>, code: &Vec<i32>) -> i32 {
-        let mut programs = Vec::<IntCode>::new();
-
-        let (mut send_result, mut receive_result) = channel::<i32>();
-        let (mut send0, mut receive0) = channel::<i32>();
+fn hard(code: &Vec<i64>) -> i64 {
+    fn simulate_hard(permutation: &Vec<i64>, code: &Vec<i64>) -> i64 {
+        let (mut send_result, mut receive_result) = channel::<i64>();
+        let (mut send0, mut receive0) = channel::<i64>();
         let mut output0 = move |val| {
             send_result.send(val).unwrap_or_default();
             send0.send(val).unwrap_or_default();
         };
         let input0 = move || { receive0.recv().unwrap_or_default() };
 
-        let (mut send, mut receive) = channel::<i32>();
+        let (mut send, mut receive) = channel::<i64>();
         let input1 = move || { receive.recv().unwrap() };
         let mut output1 = move |val| { send.send(val).unwrap_or_default(); };
 
-        let (mut send, mut receive) = channel::<i32>();
+        let (mut send, mut receive) = channel::<i64>();
         let input2 = move || { receive.recv().unwrap() };
         let mut output2 = move |val| { send.send(val).unwrap_or_default(); };
 
-        let (mut send, mut receive) = channel::<i32>();
+        let (mut send, mut receive) = channel::<i64>();
         let input3 = move || { receive.recv().unwrap() };
         let mut output3 = move |val| { send.send(val).unwrap_or_default(); };
 
-        let (mut send, mut receive) = channel::<i32>();
+        let (mut send, mut receive) = channel::<i64>();
         let input4 = move || { receive.recv().unwrap() };
         let mut output4 = move |val| { send.send(val).unwrap_or_default(); };
 

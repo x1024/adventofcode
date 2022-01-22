@@ -1,5 +1,4 @@
 use std::fs;
-use std::collections::HashMap;
 use counter::Counter;
 
 
@@ -16,8 +15,8 @@ pub mod tests {
     #[test]
     pub fn test_hard() {
       let input = String::from("0222112222120000");
-      assert_eq!(hard(&input, 2, 2), "01
-10");
+      assert_eq!(hard(&input, 2, 2), " █
+█ ");
     }
 }
 
