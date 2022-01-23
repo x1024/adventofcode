@@ -161,7 +161,7 @@ fn hard(code: String) -> usize {
                 // println!("{:?} {:?}", result, *p);
                 min_result = result;
                 min_point = *p;
-          :ta  }
+          }
         }
 
         used.insert(min_point);

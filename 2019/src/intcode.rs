@@ -120,7 +120,7 @@ pub struct IntCode<'a> {
 
 impl<'a> IntCode<'a>
 {
-  pub fn create(code: Vec<i64>,
+  pub fn new(code: Vec<i64>,
       input: Box<dyn FnMut() -> i64 + 'a>,
       output: Box<dyn FnMut(i64) + 'a>)
         -> IntCode<'a> {
@@ -276,15 +276,7 @@ pub fn run_intcode<'a, I: 'a, O: 'a>(code: Vec<i64>, input: I, output: O) -> Vec
   let mut code = code.clone();
   code.resize(10000, 0);
 
-  let mut c = IntCode {
-    code: code.clone(),
-    stack_pointer: 0,
-    relative_base: 0,
-    modes: 0,
-    opcode: Opcode::Exit,
-    input: Box::new(input),
-    output: Box::new(output),
-  };
+  let mut c = IntCode::new(code.clone(), Box::new(input), Box::new(output));
 
   loop {
     if let Opcode::Exit = c.run_step() {

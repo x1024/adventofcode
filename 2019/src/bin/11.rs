@@ -1,10 +1,12 @@
 use std::fs;
 use std::collections::HashMap;
-use pipe_channel::channel;
+use std::sync::{Arc, Mutex};
 
 use advent_of_code_2019::intcode::run_intcode;
 
 type Point = (i32, i32);
+
+#[derive(Debug)]
 enum Direction {
     R,
     L,
@@ -87,7 +89,6 @@ impl P11 {
     }
 
     fn output(&mut self, value: i64) {
-        self.move_forward();
         if self.num_inputs % 2 == 0 {
             self.paint(value);
         } else {
@@ -98,23 +99,63 @@ impl P11 {
         }
         self.num_inputs += 1;
     }
+
+    fn count_tiles(&self) -> usize {
+        self.data.iter().fold(0, |total, (_, _)| total + 1)
+    }
+
+    fn as_string(&self) -> String {
+        let min_pos = self.data.iter().fold((0, 0), |total, (key, _)|
+            (total.0.min(key.0), total.1.min(key.1)));
+        let max_pos = self.data.iter().fold((0, 0), |total, (key, _)|
+            (total.0.max(key.0), total.1.max(key.1)));
+        // println!("{:?} {:?}", min_pos, max_pos);
+
+        let data = &self.data;
+        let mut result = Vec::<String>::new();
+
+        for col in min_pos.1..max_pos.1+1 {
+            let mut row_vec = Vec::<char>::new();
+            for row in min_pos.0..max_pos.0+1 {
+                let val = data.get(&(row, col)).unwrap_or(&false);
+                row_vec.push(if *val { '█' } else { ' ' });
+            }
+
+            result.push(row_vec.iter().collect::<String>());
+        }
+
+        result.join("\n")
+    }
 }
 
-fn easy(code: &Vec<i64>) -> i64 {
+fn easy(code: &Vec<i64>) -> usize {
+    let app = P11::make();
+    let mutex = Arc::new(Mutex::new(app));
+    run_intcode(code.clone(),
+        || mutex.lock().unwrap().input(),
+        |val| mutex.lock().unwrap().output(val)
+    );
+
+    let app = mutex.lock().unwrap();
+    app.count_tiles()
+}
+
+fn hard(code: &Vec<i64>) -> String {
     let mut app = P11::make();
-    run_intcode(code.clone(), || app.input(), |val| app.output(val));
+    app.data.insert((0, 0), true);
+    let mutex = Arc::new(Mutex::new(app));
 
-    app.data.iter().fold(0, |total, (_, value)| total + if *value { 1 } else { 0 })
-}
+    run_intcode(code.clone(),
+        || mutex.lock().unwrap().input(),
+        |val| mutex.lock().unwrap().output(val)
+    );
 
-fn hard(code: &Vec<i64>) -> i64 {
-    let mut res: i64 = 0;
-    // run_intcode(code.clone(), || 2, |val| res = val);
-    res
+    let app = mutex.lock().unwrap();
+    app.as_string()
 }
 
 fn main() {
-    let code = fs::read_to_string("input/9.txt").expect("Unable to read input file");
+    let code = fs::read_to_string("input/11.txt").expect("Unable to read input file");
     let code = parse_input(code);
     println!("{}", easy(&code));
     println!("{}", hard(&code));
