@@ -270,6 +270,20 @@ pub fn run_intcode_simple(code: &Vec<i64>) -> Vec<i64> {
   run_intcode(code, || 0, |val| println!("{}", val))
 }
 
+pub fn run_intcode_ascii<'a, O: 'a>(code: &Vec<i64>, input: &String, output: O) -> Vec<i64>
+    where O: FnMut(i64) {
+
+  let mut index = 0;
+  let input = input.chars().collect::<Vec<_>>();
+
+  run_intcode(code, || {
+      let value = input[index] as i64;
+      // println!("INPUT {} {} {}", index, input[index], value);
+      index += 1;
+      value
+  }, output)
+}
+
 pub fn run_intcode<'a, I: 'a, O: 'a>(code: &Vec<i64>, input: I, output: O) -> Vec<i64>
     where I: FnMut() -> i64, O: FnMut(i64) {
 

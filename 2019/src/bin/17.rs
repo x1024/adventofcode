@@ -1,3 +1,4 @@
+use advent_of_code_2019::intcode::run_intcode_ascii;
 use advent_of_code_2019::intcode::run_intcode;
 use std::fs;
 use std::{thread, time};
@@ -9,7 +10,6 @@ enum TileType {
     Empty,
     Scaffold,
 }
-
 
 fn parse_input(data: String) -> Vec<i64> {
     data.split(",")
@@ -64,6 +64,17 @@ impl P17 {
             .flatten()
             .collect::<HashMap<_, _>>();
     }
+
+    fn print_map(&mut self) {
+        let map = self.code.iter()
+            .map(|c| (*c as u8) as char)
+            .collect::<String>();
+
+        // clear screen
+        print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+        println!("{}", map);
+        thread::sleep(time::Duration::from_millis(50));
+    }
         
     fn check_map(&mut self) -> i64 {
         let offsets: Vec<Point> = vec!(
@@ -100,46 +111,24 @@ impl P17 {
 
     fn run_bot(&mut self, code: &Vec<i64>, input: &String) -> i64 {
         let mut code = code.clone();
-        self.map.clear();
-        self.code.clear();
+        code[0] = 2;
 
         let print_output = input.find("y").unwrap_or(input.len() * 2) < input.len();
 
-        let mutex = Arc::new(Mutex::new(self));
-        let mut index = 0;
-        let input = input.chars().collect::<Vec<_>>();
-
-        code[0] = 2;
-
-        run_intcode(&code, || {
-            let value = input[index] as i64;
-            // println!("INPUT {} {} {}", index, input[index], value);
-            index += 1;
-            value
-        }
-        , |val| {
-            let mut app = mutex.lock().unwrap();
-            let code = &app.code;
+        run_intcode_ascii(&code, input, |val| {
+            let code = &self.code;
 
             // On two consequitive newlines, print out the current output buffer
             if print_output && code.len() >= 2 && code[code.len() - 1] == val && val == '\n' as i64 {
-                app.render_map();
-                let map = app.code.iter()
-                    .map(|c| (*c as u8) as char)
-                    .collect::<String>();
-
-                // clear screen
-                print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
-                println!("{}", map);
-                app.map.clear();
-                app.code.clear();
-                thread::sleep(time::Duration::from_millis(50));
+                self.render_map();
+                self.print_map();
+                self.map.clear();
+                self.code.clear();
             }
-            app.output(val);
+            self.output(val);
         });
 
-        let app = mutex.lock().unwrap();
-        app.code[app.code.len() - 1]
+        self.code[self.code.len() - 1]
     }
 }
 
