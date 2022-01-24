@@ -11,13 +11,13 @@ pub mod tests {
     #[test]
     pub fn test_easy() {
         assert_eq!(
-            run_intcode_simple(Vec::from([1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50]))[0],
+            run_intcode_simple(&Vec::from([1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50]))[0],
             3500
         );
-        assert_eq!(run_intcode_simple(Vec::from([1, 0, 0, 0, 99]))[0], 2);
-        assert_eq!(run_intcode_simple(Vec::from([2, 3, 0, 3, 99]))[3], 6);
-        assert_eq!(run_intcode_simple(Vec::from([2, 4, 4, 5, 99, 0]))[5], 9801);
-        assert_eq!(run_intcode_simple(Vec::from([1, 1, 1, 4, 99, 5, 6, 0, 99]))[0], 30);
+        assert_eq!(run_intcode_simple(&Vec::from([1, 0, 0, 0, 99]))[0], 2);
+        assert_eq!(run_intcode_simple(&Vec::from([2, 3, 0, 3, 99]))[3], 6);
+        assert_eq!(run_intcode_simple(&Vec::from([2, 4, 4, 5, 99, 0]))[5], 9801);
+        assert_eq!(run_intcode_simple(&Vec::from([1, 1, 1, 4, 99, 5, 6, 0, 99]))[0], 30);
     }
 
     #[test]
@@ -38,7 +38,7 @@ fn easy(code: &Vec<i64>) -> i64 {
     let mut code = code.clone();
     code[1] = 12;
     code[2] = 2;
-    let code = run_intcode_simple(code);
+    let code = run_intcode_simple(&code);
     code[0]
 }
 
@@ -49,7 +49,7 @@ fn hard(code: &Vec<i64>) -> i64 {
             let mut code = code.clone();
             code[1] = noun;
             code[2] = verb;
-            let result = run_intcode_simple(code);
+            let result = run_intcode_simple(&code);
             if result[0] == expected {
                 return 100 * noun + verb
             }

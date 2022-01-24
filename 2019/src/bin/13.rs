@@ -139,7 +139,7 @@ impl P13 {
 fn easy(code: &Vec<i64>) -> usize {
     let app = P13::make();
     let mutex = Arc::new(Mutex::new(app));
-    run_intcode(code.clone(),
+    run_intcode(code,
         || mutex.lock().unwrap().input(),
         |val| mutex.lock().unwrap().output(val)
     );
@@ -155,7 +155,7 @@ fn hard(code: &Vec<i64>) -> i64 {
 
     let app = P13::make();
     let mutex = Arc::new(Mutex::new(app));
-    run_intcode(code.clone(),
+    run_intcode(&code,
         || {
             let mut app = mutex.lock().unwrap();
             // clear screen

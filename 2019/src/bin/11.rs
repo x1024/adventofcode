@@ -14,12 +14,6 @@ enum Direction {
     D,
 }
 
-
-#[cfg(test)]
-pub mod tests {
-    use super::*;
-}
-
 fn parse_input(data: String) -> Vec<i64> {
     data.split(",")
         .map(|line| line.parse::<i64>().unwrap())
@@ -131,7 +125,7 @@ impl P11 {
 fn easy(code: &Vec<i64>) -> usize {
     let app = P11::make();
     let mutex = Arc::new(Mutex::new(app));
-    run_intcode(code.clone(),
+    run_intcode(code,
         || mutex.lock().unwrap().input(),
         |val| mutex.lock().unwrap().output(val)
     );
@@ -145,7 +139,7 @@ fn hard(code: &Vec<i64>) -> String {
     app.data.insert((0, 0), true);
     let mutex = Arc::new(Mutex::new(app));
 
-    run_intcode(code.clone(),
+    run_intcode(code,
         || mutex.lock().unwrap().input(),
         |val| mutex.lock().unwrap().output(val)
     );

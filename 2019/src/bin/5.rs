@@ -15,13 +15,13 @@ fn parse_input() -> Result<Vec<i64>> {
 
 fn easy(code: &Vec<i64>) -> i64 {
     let mut result = 0;
-    run_intcode(code.clone(), || 1, |val| result = val);
+    run_intcode(code, || 1, |val| result = val);
     result
 }
 
 fn hard(code: &Vec<i64>) -> i64 {
     let mut result = 0;
-    run_intcode(code.clone(), || 5, |val| result = val);
+    run_intcode(code, || 5, |val| result = val);
     result
 }
 

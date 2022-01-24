@@ -5,30 +5,30 @@ pub mod tests {
     #[test]
     pub fn test_add() {
       let data = vec!(1, 0, 0, 0, 99);
-      assert_eq!(run_intcode_simple(data)[0], 2);
+      assert_eq!(run_intcode_simple(&data)[0], 2);
     }
 
     #[test]
     pub fn test_mul() {
       let data = vec!(2, 3, 0, 3, 99);
-      assert_eq!(run_intcode_simple(data)[3], 6);
+      assert_eq!(run_intcode_simple(&data)[3], 6);
     }
 
     #[test]
     pub fn test_easy() {
       let data = vec!(1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50);
-      assert_eq!(run_intcode_simple(data)[0], 3500);
+      assert_eq!(run_intcode_simple(&data)[0], 3500);
       let data = vec!(2, 4, 4, 5, 99, 0);
-      assert_eq!(run_intcode_simple(data)[5], 9801);
+      assert_eq!(run_intcode_simple(&data)[5], 9801);
       let data = vec!(1, 1, 1, 4, 99, 5, 6, 0, 99);
-      assert_eq!(run_intcode_simple(data)[0], 30);
+      assert_eq!(run_intcode_simple(&data)[0], 30);
     }
 
     #[test]
     pub fn test_input_repeat() {
       let data = vec!(3,0,4,0,99);
       let mut result:i64 = 0;
-      run_intcode(data, || 10, |val| result = val);
+      run_intcode(&data, || 10, |val| result = val);
       assert_eq!(result, 10);
     }
 
@@ -36,14 +36,14 @@ pub mod tests {
     pub fn test_immediate_mode() {
       // Multiply 3 by data[4] and put it into data[4]
       let data = vec!(1002,4,3,4,33);
-      let result = run_intcode_simple(data);
+      let result = run_intcode_simple(&data);
       assert_eq!(result[4], 99);
     }
 
     #[test]
     pub fn test_negative_values() {
       let data = vec!(1101,100,-1,4,0);
-      let result = run_intcode_simple(data);
+      let result = run_intcode_simple(&data);
       assert_eq!(result[4], 99);
     }
 
@@ -51,10 +51,10 @@ pub mod tests {
     pub fn test_jumps_position_mode() {
       let data = vec!(3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9);
       let mut result:i64 = 0;
-      run_intcode(data.clone(), || 0, |val| result = val);
+      run_intcode(&data, || 0, |val| result = val);
       assert_eq!(result, 0);
 
-      run_intcode(data.clone(), || 10, |val| result = val);
+      run_intcode(&data, || 10, |val| result = val);
       assert_eq!(result, 1);
     }
 
@@ -62,10 +62,10 @@ pub mod tests {
     pub fn test_jumps_immediate_mode() {
       let data = vec!(3,3,1105,-1,9,1101,0,0,12,4,12,99,1);
       let mut result:i64 = 0;
-      run_intcode(data.clone(), || 0, |val| result = val);
+      run_intcode(&data, || 0, |val| result = val);
       assert_eq!(result, 0);
 
-      run_intcode(data.clone(), || 10, |val| result = val);
+      run_intcode(&data, || 10, |val| result = val);
       assert_eq!(result, 1);
     }
 
@@ -77,13 +77,13 @@ pub mod tests {
         999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99);
       let mut result:i64 = 0;
 
-      run_intcode(data.clone(), || 0, |val| result = val);
+      run_intcode(&data, || 0, |val| result = val);
       assert_eq!(result, 999);
 
-      run_intcode(data.clone(), || 8, |val| result = val);
+      run_intcode(&data, || 8, |val| result = val);
       assert_eq!(result, 1000);
 
-      run_intcode(data.clone(), || 16, |val| result = val);
+      run_intcode(&data, || 16, |val| result = val);
       assert_eq!(result, 1001);
     }
 }
@@ -266,11 +266,11 @@ impl<'a> IntCode<'a>
   }
 }
 
-pub fn run_intcode_simple(code: Vec<i64>) -> Vec<i64> {
+pub fn run_intcode_simple(code: &Vec<i64>) -> Vec<i64> {
   run_intcode(code, || 0, |val| println!("{}", val))
 }
 
-pub fn run_intcode<'a, I: 'a, O: 'a>(code: Vec<i64>, input: I, output: O) -> Vec<i64>
+pub fn run_intcode<'a, I: 'a, O: 'a>(code: &Vec<i64>, input: I, output: O) -> Vec<i64>
     where I: FnMut() -> i64, O: FnMut(i64) {
 
   let mut code = code.clone();

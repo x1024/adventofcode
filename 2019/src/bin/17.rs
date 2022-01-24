@@ -38,7 +38,7 @@ impl P17 {
 
     fn read_map(&mut self, code: &Vec<i64>) {
         let mutex = Arc::new(Mutex::new(self));
-        run_intcode(code.clone(), ||0, |val| { mutex.lock().unwrap().output(val); });
+        run_intcode(&code, ||0, |val| { mutex.lock().unwrap().output(val); });
     }
 
     fn render_map(&mut self) {
@@ -99,6 +99,7 @@ impl P17 {
     }
 
     fn run_bot(&mut self, code: &Vec<i64>, input: &String) -> i64 {
+        let mut code = code.clone();
         self.map.clear();
         self.code.clear();
 
@@ -108,10 +109,9 @@ impl P17 {
         let mut index = 0;
         let input = input.chars().collect::<Vec<_>>();
 
-        let mut code = code.clone();
         code[0] = 2;
 
-        run_intcode(code, || {
+        run_intcode(&code, || {
             let value = input[index] as i64;
             // println!("INPUT {} {} {}", index, input[index], value);
             index += 1;

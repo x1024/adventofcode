@@ -82,7 +82,7 @@ fn easy(code: &Vec<i64>) -> i64 {
 
         let l = permutation.len();
         for (i, _) in permutation.iter().enumerate() {
-            run_intcode(code.clone(), || { inputs[i]() }, |val| outputs[(i+1)%l](val));
+            run_intcode(code, || { inputs[i]() }, |val| outputs[(i+1)%l](val));
         }
 
         inputs[0]()
@@ -95,6 +95,8 @@ fn easy(code: &Vec<i64>) -> i64 {
 
 fn hard(code: &Vec<i64>) -> i64 {
     fn simulate_hard(permutation: &Vec<i64>, code: &Vec<i64>) -> i64 {
+        // TODO: use mutexes here, what the hell is even wrong with you
+
         let (mut send_result, mut receive_result) = channel::<i64>();
         let (mut send0, mut receive0) = channel::<i64>();
         let mut output0 = move |val| {
@@ -134,11 +136,11 @@ fn hard(code: &Vec<i64>) -> i64 {
         let c4 = code.clone();
 
         let mut handles = Vec::<JoinHandle<()>>::new();
-        handles.push(thread::spawn(|| { run_intcode(c0, input0, output1); }));
-        handles.push(thread::spawn(|| { run_intcode(c1, input1, output2); }));
-        handles.push(thread::spawn(|| { run_intcode(c2, input2, output3); }));
-        handles.push(thread::spawn(|| { run_intcode(c3, input3, output4); }));
-        handles.push(thread::spawn(|| { run_intcode(c4, input4, output0); }));
+        handles.push(thread::spawn(move || { run_intcode(&c0, input0, output1); }));
+        handles.push(thread::spawn(move || { run_intcode(&c1, input1, output2); }));
+        handles.push(thread::spawn(move || { run_intcode(&c2, input2, output3); }));
+        handles.push(thread::spawn(move || { run_intcode(&c3, input3, output4); }));
+        handles.push(thread::spawn(move || { run_intcode(&c4, input4, output0); }));
 
         for thread in handles {
             thread.join().expect("Unable to join thread");
