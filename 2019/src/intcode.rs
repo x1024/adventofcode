@@ -94,6 +94,12 @@ enum Mode {
   Relative = 2,
 }
 
+/// If an [Opcode::Input] instruction returns this special value,
+/// the program immediately quits.
+/// 
+pub const INPUT_SHORT_CIRCUIT: i64 = i64::MAX;
+
+
 #[derive(Debug, Copy, Clone)]
 pub enum Opcode {
   Add,
@@ -211,6 +217,9 @@ impl<'a> IntCode<'a>
         let ia = self.get_index(1);
         let input = &mut self.input;
         let v1l = input();
+        if v1l == INPUT_SHORT_CIRCUIT {
+          return Opcode::Exit
+        }
         self.code[ia] = v1l;
         2
       }
@@ -266,6 +275,18 @@ impl<'a> IntCode<'a>
   }
 }
 
+/// Runs an IntCode program where the input is always `0` and the output is always printed to `stdout`
+///
+/// # Parameters
+/// - `code`: A `Vec<i64>` that contains IntCode instructions
+///
+/// # Examples
+///
+/// ```rust
+/// // Read a number from input (in this case, always zero) and write it to output.
+/// let code = vec!(3, 10, 4, 10, 99);
+/// run_intcode_simple(&code);
+/// ```
 pub fn run_intcode_simple(code: &Vec<i64>) -> Vec<i64> {
   run_intcode(code, || 0, |val| println!("{}", val))
 }
@@ -282,11 +303,25 @@ pub fn run_intcode_ascii<'a, O: 'a>(code: &Vec<i64>, input: &str, output: O) -> 
   }, output)
 }
 
+/// Runs an IntCode program and returns the state of all registers
+///
+/// # Parameters
+/// - `code`: A `Vec<i64>` that contains IntCode instructions
+/// - `input`: A function that takes no arguments and returns one [i64] value. Used for the [Opcode::Input] IntCode instruction
+/// - `output`: A function that takes an integer and returns nothing. Used for the [Opcode::Output] IntCode instruction
+///
+/// # Examples
+///
+/// ```rust
+/// // Read a number from input and write it to output.
+/// let code = vec!(3, 10, 4, 10, 99);
+/// run_intcode(&code, || 10, |val| { println!("{}", val); });
+/// ```
 pub fn run_intcode<'a, I: 'a, O: 'a>(code: &Vec<i64>, input: I, output: O) -> Vec<i64>
     where I: FnMut() -> i64, O: FnMut(i64) {
 
   let mut code = code.clone();
-  code.resize(100000, 0);
+  code.resize(1000000, 0);
 
   let mut c = IntCode::new(code.clone(), Box::new(input), Box::new(output));
 
