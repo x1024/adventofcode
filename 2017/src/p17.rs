@@ -2,10 +2,11 @@ use std::fs;
 
 #[cfg(test)]
 mod tests {
-    
+    use super::*;
 
     #[test]
     fn test_easy() {
+        assert_eq!(easy(3), 638);
     }
 
     #[test]
@@ -13,7 +14,7 @@ mod tests {
     }
 }
 
-pub fn easy(_data: &str) -> i32 {
+pub fn easy(step: i32) -> i32 {
     unimplemented!();
 }
 
