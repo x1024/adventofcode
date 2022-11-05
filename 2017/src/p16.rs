@@ -45,7 +45,7 @@ fn solve(dancers: &mut Vec<char>, dance: &Vec<Move>) {
                 let mut ia = 0;
                 let mut ib = 0;
                 let a = a.chars().next().unwrap();
-                let b = b.chars().next().unwrap();;
+                let b = b.chars().next().unwrap();
                 for (i, d) in dancers.iter().enumerate() {
                     if *d == a { ia = i; }
                     if *d == b { ib = i; }

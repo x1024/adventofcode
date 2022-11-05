@@ -74,10 +74,6 @@ pub fn hard(val_a: u64, val_b: u64, steps: usize) -> i64 {
     count
 }
 
-fn parse_input(_data: &str) -> &str {
-    unimplemented!();
-}
-
 pub fn main() {
     let input = fs::read_to_string("input/15.txt").unwrap();
     let inputs = input.split("\n")

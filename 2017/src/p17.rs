@@ -22,7 +22,7 @@ pub fn solve(step: usize, limit: usize, result_index: usize) -> usize {
     next.insert(0, 0);
 
     for value in 1..limit+1 {
-        if value % 10000 == 0 {
+        if value % 100000 == 0 {
             println!("{}", value);
         }
         for _ in 0..step {
