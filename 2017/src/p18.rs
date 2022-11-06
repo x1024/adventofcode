@@ -287,9 +287,7 @@ pub fn hard(input: &str) -> i64 {
 
 pub fn main() {
     let input = fs::read_to_string("input/18.txt").unwrap();
-    if false {
-        let input = parse_input(&input);
-        println!("{:?}", easy(&input));
-    }
+    let parsed = parse_input(&input);
+    println!("{:?}", easy(&parsed));
     println!("{:?}", hard(&input));
 }
