@@ -1,5 +1,8 @@
+import pprint
+import collections
+
 def solve(input):
-  print(input)
+  pprint.pprint(input)
   return 0
 
 
@@ -11,7 +14,7 @@ def parse_input(input):
   # input = input.split('\n')
   # input = [row.strip() for row in input]
   # input = [row for row in input if row]
-  # input = map(int, input)
+  # input = list(map(int, input))
   # input = map(parse_line, input)
   return input
 
