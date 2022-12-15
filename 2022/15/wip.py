@@ -92,8 +92,9 @@ def solve(_input, min_coord=0, max_coord=20):
     for start, end, s1 in sorted(ranges):
       # The overlap will end in this long
       if not(max_s1 < y and s1 > y or max_s1 > y and s1 < y):
-        # Only count rectangles that "are going in different directions"
-        # That is, one is growing and the other one is shrinking.
+        # Only count rectangles that "are NOT going in different directions"
+        # That is, both must be growing or shrinking at the same time
+        # (Otherise, their overlap doesn't actually change)
         min_overlap = min(min_overlap, int(abs(start - range_end) / 2))
       if start > end: continue
       r1 = (start, end)
