@@ -1,11 +1,13 @@
 import pprint
 import collections
 import numpy
+import IPython
 
 
 def solve(input):
   pprint.pprint(input)
-  return 0
+  result = 0
+  return result
 
 
 def parse_line(input):
@@ -39,3 +41,4 @@ print("Result: {}".format(result))
 import pyperclip
 pyperclip.copy(str(result))
 
+IPython.embed()
