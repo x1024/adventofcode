@@ -1,43 +1,26 @@
-import pprint
+import IPython
 import collections
 import numpy
-import IPython
+import pprint
+import re
+
+data = open('input.txt', 'r').read().strip()
+data_test = '''
+'''
+# data = data_test
+data = data.split('\n')
+data = [row.strip() for row in data]
+data = [row for row in data if row]
+# data = list(map(int, data))
+data = [row.split() for row in data]
+
+pprint.pprint(data)
+result = 0
+print(result)
 
 
-def solve(input):
-  pprint.pprint(input)
-  result = 0
-  return result
 
-
-def parse_line(input):
-  return input.split()
-
-
-def parse_input(input):
-  input = input.split('\n')
-  input = [row.strip() for row in input]
-  input = [row for row in input if row]
-  # input = list(map(int, input))
-  input = list(map(parse_line, input))
-  return input
-
-
-def test():
-  input = '''
-  '''
-  input = parse_input(input)
-  result = solve(input)
-  print("Test Result: {}".format(result))
-  return
-
-
-# test()
-input = open('input.txt', 'r').read().strip()
-input = parse_input(input)
-result = solve(input)
 print("Result: {}".format(result))
-
 import pyperclip
 pyperclip.copy(str(result))
 
