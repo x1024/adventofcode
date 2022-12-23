@@ -24,7 +24,7 @@ while not 'root' in asd:
       a, oper, b = value.split(" ")
       if a in asd and b in asd:
         asd[key] = eval("%s %s %s" % (asd[a], oper, asd[b]))
-        print("ASDASD")
+        # print("ASDASD")
       # print(a, oper, b)
 print(len(asd))
 print(asd['root'])
