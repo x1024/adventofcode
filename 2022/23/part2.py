@@ -65,14 +65,6 @@ def print_board(board):
     print()
   print()
 
-# data = data_test
-data = data.strip("\n").split('\n')
-data = [row.strip() for row in data]
-# data = list(map(int, data))
-board = collections.defaultdict(lambda: EMPTY)
-for i, row in enumerate(data):
-  for j, cell in enumerate(row):
-    board[complex(i, j)] = cell
 
 def iterate(turn, board):
   l = len(dirs)
@@ -107,6 +99,15 @@ def iterate(turn, board):
 
   return moved
 
+# data = data_test
+data = data.strip("\n").split('\n')
+data = [row.strip() for row in data]
+# data = list(map(int, data))
+board = collections.defaultdict(lambda: EMPTY)
+for i, row in enumerate(data):
+  for j, cell in enumerate(row):
+    board[complex(i, j)] = cell
+
 # pprint.pprint(data)
 print_board(board)
 turn = 0
@@ -115,7 +116,8 @@ while True:
   if moved == 0: break
   turn += 1
   # print_board(board)
-  print(turn, moved, checksum(board))
+  if turn % 10 == 0:
+    print(turn, moved, checksum(board))
 result = turn + 1
 print(result)
 
@@ -124,4 +126,4 @@ print("Result: {}".format(result))
 import pyperclip
 pyperclip.copy(str(result))
 
-IPython.embed()
+# IPython.embed()
