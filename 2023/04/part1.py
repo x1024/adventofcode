@@ -5,22 +5,17 @@ import re
 import functools
 import itertools
 
+def play_round(row):
+    game, cards = row.split(":")
+    have, winning = cards.split("|")
+    game = game.replace("Card ", "")
+    have = have.split()
+    winning = winning.split()
+    matches = set(have).intersection(set(winning))
+    return int(2**((len(matches)) - 1 ))
 
 def main(data):
-    # pprint.pprint(data)
-    data = data.split('\n')
-    data = [row.strip() for row in data]
-    data = [row for row in data if row]
-    data = [row.split() for row in data]
-    # data = list(map(int, data))
-
-    result = 0
-
-
-
-
-    print(result)
-    return result
+    return sum(map(play_round, [row.strip() for row in data.split('\n')]))
 
 
 data_test = open('input-sample.txt', 'r').read().strip()
