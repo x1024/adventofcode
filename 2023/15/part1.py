@@ -5,10 +5,22 @@ import re
 import functools
 import itertools
 
+def hash(string):
+    current = 0
+    for s in string:
+        current += ord(s)
+        current *= 17
+        current %= 256
+    return current
+
 
 def main(data):
     # pprint.pprint(data)
-    data = [row.strip() for row in data.split('\n')]
+    print(data)
+    return sum([hash(p) for p in data.split(',')])
+    print(parts)
+    exit()
+    # data = [row.strip() for row in data.split('\n')]
     # data = [row for row in data if row]
     # data = [row.split() for row in data]
     # data = list(map(int, data))
@@ -31,8 +43,6 @@ def main(data):
 data_test = open('input-sample.txt', 'r').read().strip()
 result = main(data_test)
 print("Test Result: {}".format(result))
-
-exit()
 
 data = open('input.txt', 'r').read().strip()
 result = main(data)
