@@ -13,7 +13,13 @@ def main(data):
     # data = [row.split() for row in data]
     # data = list(map(int, data))
 
+    for row in data:
+        name, rules = row.replace("}").split("{")
+        rules = rules.split(",")
+
+
     # parse into a grid
+    # map = {}
     # for r, row in enumerate(data):
     #     for c, col in enumerate(row):
     #         coord = (c + r * 1j)
